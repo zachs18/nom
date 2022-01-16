@@ -2,7 +2,9 @@
 use crate::error::{ErrorKind, ParseError};
 use crate::internal::{Err, IResult, Needed};
 use crate::lib::std::iter::{Copied, Enumerate};
-use crate::lib::std::ops::{Range, RangeFrom, RangeFull, RangeTo};
+use crate::lib::std::ops::{
+  Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
+};
 use crate::lib::std::slice::Iter;
 use crate::lib::std::str::from_utf8;
 use crate::lib::std::str::CharIndices;
@@ -913,6 +915,63 @@ impl<'a> FindToken<char> for &'a str {
     self.chars().any(|i| i == token)
   }
 }
+
+macro_rules! findtoken_owned_impls {
+  ( $range:ident ) => {
+    impl<'a, 'b, T: Ord> FindToken<&'a T> for &'b $range<T> {
+      fn find_token(&self, token: &'a T) -> bool {
+        (&**self).find_token(token)
+      }
+    }
+
+    impl<T: Ord> FindToken<T> for $range<T> {
+      fn find_token(&self, token: T) -> bool {
+        self.find_token(&token)
+      }
+    }
+
+    impl<'b, T: Ord> FindToken<T> for &'b $range<T> {
+      fn find_token(&self, token: T) -> bool {
+        (&**self).find_token(&token)
+      }
+    }
+  };
+}
+
+impl<'a, T: Ord> FindToken<&'a T> for Range<T> {
+  fn find_token(&self, token: &'a T) -> bool {
+    &self.start <= token && token < &self.end
+  }
+}
+findtoken_owned_impls!(Range);
+
+impl<'a, T: Ord> FindToken<&'a T> for RangeFrom<T> {
+  fn find_token(&self, token: &'a T) -> bool {
+    &self.start <= token
+  }
+}
+findtoken_owned_impls!(RangeFrom);
+
+impl<'a, T: Ord> FindToken<&'a T> for RangeInclusive<T> {
+  fn find_token(&self, token: &'a T) -> bool {
+    self.start() <= token && token <= self.end()
+  }
+}
+findtoken_owned_impls!(RangeInclusive);
+
+impl<'a, T: Ord> FindToken<&'a T> for RangeTo<T> {
+  fn find_token(&self, token: &'a T) -> bool {
+    token < &self.end
+  }
+}
+findtoken_owned_impls!(RangeTo);
+
+impl<'a, T: Ord> FindToken<&'a T> for RangeToInclusive<T> {
+  fn find_token(&self, token: &'a T) -> bool {
+    token <= &self.end
+  }
+}
+findtoken_owned_impls!(RangeToInclusive);
 
 /// Look for a substring in self
 pub trait FindSubstring<T> {
