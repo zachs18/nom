@@ -83,6 +83,7 @@ where
 /// # use nom::{Err, error::ErrorKind};
 /// # use nom::character::complete::one_of;
 /// assert_eq!(one_of::<_, _, (&str, ErrorKind)>("abc")("b"), Ok(("", 'b')));
+/// assert_eq!(one_of::<_, _, (&str, ErrorKind)>('a'..='z')("q"), Ok(("", 'q')));
 /// assert_eq!(one_of::<_, _, (&str, ErrorKind)>("a")("bc"), Err(Err::Error(("bc", ErrorKind::OneOf))));
 /// assert_eq!(one_of::<_, _, (&str, ErrorKind)>("a")(""), Err(Err::Error(("", ErrorKind::OneOf))));
 /// ```
@@ -107,6 +108,7 @@ where
 /// # use nom::{Err, error::ErrorKind};
 /// # use nom::character::complete::none_of;
 /// assert_eq!(none_of::<_, _, (&str, ErrorKind)>("abc")("z"), Ok(("", 'z')));
+/// assert_eq!(none_of::<_, _, (&str, ErrorKind)>('a'..='z')("q"), Err(Err::Error(("q", ErrorKind::NoneOf))));
 /// assert_eq!(none_of::<_, _, (&str, ErrorKind)>("ab")("a"), Err(Err::Error(("a", ErrorKind::NoneOf))));
 /// assert_eq!(none_of::<_, _, (&str, ErrorKind)>("a")(""), Err(Err::Error(("", ErrorKind::NoneOf))));
 /// ```

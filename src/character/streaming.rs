@@ -84,6 +84,7 @@ where
 /// # use nom::{Err, error::ErrorKind, Needed};
 /// # use nom::character::streaming::one_of;
 /// assert_eq!(one_of::<_, _, (_, ErrorKind)>("abc")("b"), Ok(("", 'b')));
+/// assert_eq!(one_of::<_, _, (_, ErrorKind)>('a'..='z')("q"), Ok(("", 'q')));
 /// assert_eq!(one_of::<_, _, (_, ErrorKind)>("a")("bc"), Err(Err::Error(("bc", ErrorKind::OneOf))));
 /// assert_eq!(one_of::<_, _, (_, ErrorKind)>("a")(""), Err(Err::Incomplete(Needed::new(1))));
 /// ```
@@ -109,6 +110,7 @@ where
 /// # use nom::{Err, error::ErrorKind, Needed};
 /// # use nom::character::streaming::none_of;
 /// assert_eq!(none_of::<_, _, (_, ErrorKind)>("abc")("z"), Ok(("", 'z')));
+/// assert_eq!(none_of::<_, _, (_, ErrorKind)>('a'..='z')("q"), Err(Err::Error(("q", ErrorKind::NoneOf))));
 /// assert_eq!(none_of::<_, _, (_, ErrorKind)>("ab")("a"), Err(Err::Error(("a", ErrorKind::NoneOf))));
 /// assert_eq!(none_of::<_, _, (_, ErrorKind)>("a")(""), Err(Err::Incomplete(Needed::new(1))));
 /// ```
