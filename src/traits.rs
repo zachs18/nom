@@ -1,4 +1,6 @@
 //! Traits input types have to implement to work with nom combinators
+use core::ops::RangeBounds;
+
 use crate::error::{ErrorKind, ParseError};
 use crate::internal::{Err, IResult, Needed};
 use crate::lib::std::iter::{Copied, Enumerate};
@@ -928,62 +930,50 @@ impl<'a, 'b> FindToken<&'a char> for &'b [char] {
   }
 }
 
-macro_rules! findtoken_owned_impls {
-  ( $range:ident ) => {
-    impl<'a, 'b, T: Ord> FindToken<&'a T> for &'b $range<T> {
+macro_rules! findtoken_range_impls {
+  ($range:ident) => {
+    impl<'a, T: PartialOrd> FindToken<&'a T> for $range<T> {
       fn find_token(&self, token: &'a T) -> bool {
-        (&**self).find_token(token)
+        self.contains(token)
       }
     }
 
-    impl<T: Ord> FindToken<T> for $range<T> {
-      fn find_token(&self, token: T) -> bool {
-        self.find_token(&token)
+    impl<'a, 'b, T: PartialOrd> FindToken<&'a T> for &'b $range<T> {
+      fn find_token(&self, token: &'a T) -> bool {
+        self.contains(token)
       }
     }
 
-    impl<'b, T: Ord> FindToken<T> for &'b $range<T> {
+    impl<T: PartialOrd> FindToken<T> for $range<T> {
       fn find_token(&self, token: T) -> bool {
-        (&**self).find_token(&token)
+        self.contains(&token)
+      }
+    }
+
+    impl<'b, T: PartialOrd> FindToken<T> for &'b $range<T> {
+      fn find_token(&self, token: T) -> bool {
+        self.contains(&token)
       }
     }
   };
 }
 
-impl<'a, T: Ord> FindToken<&'a T> for Range<T> {
-  fn find_token(&self, token: &'a T) -> bool {
-    &self.start <= token && token < &self.end
-  }
-}
-findtoken_owned_impls!(Range);
+findtoken_range_impls!(Range);
+findtoken_range_impls!(RangeFrom);
+findtoken_range_impls!(RangeInclusive);
+findtoken_range_impls!(RangeTo);
+findtoken_range_impls!(RangeToInclusive);
 
-impl<'a, T: Ord> FindToken<&'a T> for RangeFrom<T> {
-  fn find_token(&self, token: &'a T) -> bool {
-    &self.start <= token
+impl<T: PartialOrd> FindToken<T> for RangeFull {
+  fn find_token(&self, token: T) -> bool {
+    self.contains(&token)
   }
 }
-findtoken_owned_impls!(RangeFrom);
-
-impl<'a, T: Ord> FindToken<&'a T> for RangeInclusive<T> {
-  fn find_token(&self, token: &'a T) -> bool {
-    self.start() <= token && token <= self.end()
+impl<'b, T: PartialOrd> FindToken<T> for &'b RangeFull {
+  fn find_token(&self, token: T) -> bool {
+    self.contains(&token)
   }
 }
-findtoken_owned_impls!(RangeInclusive);
-
-impl<'a, T: Ord> FindToken<&'a T> for RangeTo<T> {
-  fn find_token(&self, token: &'a T) -> bool {
-    token < &self.end
-  }
-}
-findtoken_owned_impls!(RangeTo);
-
-impl<'a, T: Ord> FindToken<&'a T> for RangeToInclusive<T> {
-  fn find_token(&self, token: &'a T) -> bool {
-    token <= &self.end
-  }
-}
-findtoken_owned_impls!(RangeToInclusive);
 
 /// Look for a substring in self
 pub trait FindSubstring<T> {
